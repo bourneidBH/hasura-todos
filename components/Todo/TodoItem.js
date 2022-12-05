@@ -20,29 +20,47 @@ const TodoItem = ({ index, todo, client }) => {
     }
   `
 
-  const [toggleTodoMutation] = useMutation(TOGGLE_TODO)
+  const [toggleTodoMutation] = useMutation(TOGGLE_TODO, {
+    refetchQueries: [
+      { query: GET_MY_TODOS },
+      "getMyTodos"
+    ]
+  })
 
-  const [removeTodoMutation] = useMutation(REMOVE_TODO)
+  const [removeTodoMutation] = useMutation(REMOVE_TODO, {
+    refetchQueries: [
+      { query: GET_MY_TODOS },
+      "getMyTodos"
+    ]
+  })
 
   const toggleTodo = () => {
     toggleTodoMutation({
-      variables: {id: todo.id, is_completed: !todo.is_completed},
-      optimisticResponse: true,
-      update: (cache) => {
-        const existingTodos = cache.readQuery({ query: GET_MY_TODOS});
-        const newTodos = existingTodos.map(t => {
-          if (t.id === todo.id) {
-            return {...t, is_completed: !todo.is_completed}
-          } else {
-            return t
-          }
-        })
-        cache.writeQuery({
-          query: GET_MY_TODOS,
-          data: {todos: newTodos}
-        })  
-      },
-    })
+      variables: {id: todo.id, isCompleted: !todo.is_completed},
+      // version below from edited from tutorial. Changed optimisticResponse to object match mutation shape instead of boolean true.
+      // Not using because refetchQueries does the same thing simpler
+
+      // optimisticResponse: {
+      //   update_todos: {
+      //     affected_rows: 1
+      //   },
+      // },
+      // update: (cache) => {
+      //   console.log(cache)
+      //   const existingTodos = cache.readQuery({ query: GET_MY_TODOS});
+      //   const newTodos = existingTodos?.todos?.map(t => {
+      //     if (t.id === todo.id) {
+      //       return {...t, is_completed: !todo.is_completed}
+      //     } else {
+      //       return t
+      //     }
+      //   })
+      //   cache.writeQuery({
+      //     query: GET_MY_TODOS,
+      //     data: {todos: newTodos}
+      //   });  
+      // }
+    });
   };
 
   const removeTodo = (e) => {
@@ -50,15 +68,6 @@ const TodoItem = ({ index, todo, client }) => {
     e.stopPropagation();
     removeTodoMutation({
       variables: {id: todo.id},
-      optimisticResponse: true,
-      update: (cache) => {
-        const existingTodos = cache.readQuery({ query: GET_MY_TODOS})
-        const newTodos = existingTodos.todos.filter(t => t.id !== todo.id)
-        cache.writeQuery({
-          query: GET_MY_TODOS,
-          data: { todos: newTodos }
-        })
-      }
     })
   }
 

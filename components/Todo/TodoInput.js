@@ -3,7 +3,7 @@ import { gql, useMutation } from "@apollo/client";
 import { GET_MY_TODOS } from "./TodoPrivateList"
 
 const ADD_TODO = gql`
-  mutation ($todo: String!, $isPublic: Boolean!) {
+  mutation addTodo ($todo: String!, $isPublic: Boolean!) {
     insert_todos(objects: {title: $todo, is_public: $isPublic}) {
       affected_rows
       returning {
@@ -20,7 +20,10 @@ const TodoInput = ({ isPublic = false }) => {
   let input;
   const [todoInput, setTodoInput] = useState("")
   const [addTodo] = useMutation(ADD_TODO, {
-    update: updateCache,
+    refetchQueries: [
+      { query: GET_MY_TODOS },
+      "addTodo"
+    ],
     onCompleted: resetInput
   })
 
@@ -28,22 +31,25 @@ const TodoInput = ({ isPublic = false }) => {
     setTodoInput("")
   }
 
-  const updateCache = (cache, {data}) => {
-    // If Todo is for public feed do nothing
-    if (isPublic) return null;
+  // From tutorial used in place of refetchQueries in TodoInput function above
 
-    // fetch todos from cache
-    const existingTodos = cache.readQuery({
-      query: GET_MY_TODOS
-    })
+  // const updateCache = (cache, {data}) => {
+  //   // If Todo is for public feed do nothing
+  //   if (isPublic) return null;
 
-    // Add new todo to cache
-    const newTodo = data.insert_todos.returning[0];
-    cache.writeQuery({
-      query: GET_MY_TODOS,
-      data: { todos: [newTodo, ...existingTodos.todos]}
-    })
-  }
+  //   // fetch todos from cache
+  //   const existingTodos = cache.readQuery({
+  //     query: GET_MY_TODOS
+  //   })
+
+  //   // Add new todo to cache
+  //   const newTodo = data.insert_todos.returning[0];
+  //   cache.writeQuery({
+  //     query: GET_MY_TODOS,
+  //     data: { todos: [newTodo, ...existingTodos.todos]}
+  //   })
+  // }
+
   return (
     <form
       className="formInput"
