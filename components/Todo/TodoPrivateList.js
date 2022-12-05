@@ -35,17 +35,15 @@ const TodoPrivateList = ({ todos }) => {
     });
   };
 
-  const [clearCompletedTodos] = useMutation(CLEAR_COMPLETED)
+  const [clearCompletedTodos] = useMutation(CLEAR_COMPLETED, {
+    refetchQueries: [
+      { query: GET_MY_TODOS },
+      "getMyTodos"
+    ]
+  })
 
   const clearCompleted = () => {
-    clearCompletedTodos({
-      optimisticResponse: true,
-      update: (cache, { data }) => {
-        const existingTodos = cache.readQuery({ query: GET_MY_TODOS})
-        const newTodos = existingTodos?.todos?.filter(t => !t.is_complete)
-        cache.writeQuery({query: GET_MY_TODOS, data: {todos: newTodos}})
-      }
-    })
+    clearCompletedTodos()
   };
 
   let filteredTodos = todos;
